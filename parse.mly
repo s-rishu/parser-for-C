@@ -30,7 +30,47 @@ let parse_error s =
  * build values using this datatype constructor to pass to the parser.
  * You will need to augment this with your own tokens...
  */
+
+//defining tokens for constants
 %token <int> INT 
+%token <float> FLOAT 
+
+//defining tokens for vars
+%token <string> VAR
+
+//defining tokens for operations
+%token PLUS
+%token MINUS
+%token MUL
+%token DIV
+
+%token GREATER_THAN
+%token LESS_THAN
+%token EQUAL_TO
+%token NOT_EQUAL_TO
+%token GREATER_THAN_EQUAL_TO
+%token LESS_THAN_EQUAL_TO
+
+%token AND
+%token OR
+%token NOT
+
+%token ASSIGN
+
+//defining tokens for keywords
+%token FOR
+%token IF
+%token ELSE
+%token WHILE
+%token RETURN
+
+//defining tokens for bracks
+%token LPAREN
+%token RPAREN
+%token LBRACE
+%token RBRACE
+
+//defining token for end of line
 %token EOF
 
 /* Here's where the real grammar starts -- you'll need to add 
