@@ -32,8 +32,7 @@ let parse_error s =
  */
 
 //defining tokens for constants
-%token <int> INT 
-%token <float> FLOAT 
+%token <float> NUM
 
 //defining tokens for vars
 %token <string> VAR
@@ -69,6 +68,7 @@ let parse_error s =
 %token RPAREN
 %token LBRACE
 %token RBRACE
+%token SEMICOLON
 
 //defining token for end of line
 %token EOF
