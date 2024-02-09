@@ -24,7 +24,7 @@ let ws=('\012'|'\t'|' ')*
 let digit=['0'-'9']
 let alpha=(['a'-'z']|['A'-'Z'])
 let decimal=digit+('.'digit+)?
-let comment="/*".*"*/"
+let comment="/*"_*"*/"
 let var_name=alpha(alpha|digit)*
 
 (* rules section *)
@@ -66,4 +66,4 @@ rule lexer = parse
 | decimal { NUM(float_of_string(Lexing.lexeme lexbuf)) }
 
 | comment { lexer lexbuf }
-| .* {}
+| _* { lexer lexbuf }
