@@ -23,9 +23,9 @@ let eol=(cr nl|nl|cr)
 let ws=('\012'|'\t'|' ')*
 let digit=['0'-'9']
 let alpha=(['a'-'z']|['A'-'Z'])
-let decimal=digit+('.'digit+)?
+let integer=digit+
 let comment="/*"_*"*/"
-let var_name=alpha(alpha|digit)*
+let var_name=alpha(alpha|digit|'_')*
 
 (* rules section *)
 rule lexer = parse
@@ -36,7 +36,7 @@ rule lexer = parse
 | "if" { IF }
 | "else" { ELSE }
 | "while" { WHILE }
-| "return" { RETURN }
+| "return" { Printf.printf ("found return"); RETURN }
 
 | '(' { LPAREN }
 | ')' { RPAREN }
@@ -44,26 +44,26 @@ rule lexer = parse
 | '}' { RBRACE }
 | ';' { SEMICOLON }
 
-| '+' { PLUS }
+| '+' { Printf.printf ("found plus"); PLUS }
 | '-' { MINUS }
-| '*' { MUL}
+| '*' { MUL }
 | '/' { DIV }
 
 | "&&" { AND }
 | "||" { OR }
 
-| ">=" { GREATER_THAN_EQUAL_TO }
-| "<=" { LESS_THAN_EQUAL_TO }
-| '>' { GREATER_THAN }
-| '<' { LESS_THAN }
-| "==" { EQUAL_TO }
-| "!=" { NOT_EQUAL_TO }
+| ">=" { GTE }
+| "<=" { LTE }
+| '>' { GT }
+| '<' { LT }
+| "==" { EQ }
+| "!=" { NEQ }
 
 | '!' { NOT }
 | '=' { ASSIGN }
 
 | var_name { VAR(Lexing.lexeme lexbuf) }
-| decimal { NUM(float_of_string(Lexing.lexeme lexbuf)) }
+| integer { NUM(int_of_string(Lexing.lexeme lexbuf)) }
 
 | comment { lexer lexbuf }
-| _* { lexer lexbuf }
+| _* { Printf.printf ("found nothing useful"); lexer lexbuf }
