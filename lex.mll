@@ -20,23 +20,24 @@ let incr_lineno lexbuf =
 let cr='\013'
 let nl='\010'
 let eol=(cr nl|nl|cr)
-let ws=('\012'|'\t'|' ')*
+let ws=('\012'|'\t'|' ')
 let digit=['0'-'9']
 let alpha=(['a'-'z']|['A'-'Z'])
 let integer=digit+
-let comment="/*"_*"*/"
 let var_name=alpha(alpha|digit|'_')*
 
 (* rules section *)
+
 rule lexer = parse
 | eol { incr_lineno lexbuf; lexer lexbuf } 
 | ws+ { lexer lexbuf }
+| "/*" { lex_comment lexbuf }
 
 | "for" { FOR }
 | "if" { IF }
 | "else" { ELSE }
 | "while" { WHILE }
-| "return" { Printf.printf ("found return"); RETURN }
+| "return" { RETURN }
 
 | '(' { LPAREN }
 | ')' { RPAREN }
@@ -44,7 +45,7 @@ rule lexer = parse
 | '}' { RBRACE }
 | ';' { SEMICOLON }
 
-| '+' { Printf.printf ("found plus"); PLUS }
+| '+' { PLUS }
 | '-' { MINUS }
 | '*' { MUL }
 | '/' { DIV }
@@ -65,5 +66,11 @@ rule lexer = parse
 | var_name { VAR(Lexing.lexeme lexbuf) }
 | integer { NUM(int_of_string(Lexing.lexeme lexbuf)) }
 
-| comment { lexer lexbuf }
-| _* { Printf.printf ("found nothing useful"); lexer lexbuf }
+| eof { EOF }
+| _ as c { failwith (Printf.sprintf "unexpected character: %C" c)}
+
+and 
+
+lex_comment = parse
+| "*/" { lexer lexbuf }
+| _ { lex_comment lexbuf }

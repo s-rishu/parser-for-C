@@ -21,7 +21,7 @@ let parse_error s =
  * terminals here.
  */
 %type <Ast.program> program
-%type <Ast.stmt> stmt
+%type <Ast.stmt> stmt, stmt_grp
 // %type <Ast.exp> exp
 // %type <Ast.rstmt> if_else, while, for
 
@@ -75,10 +75,14 @@ let parse_error s =
 
 //defining token for end of line
 %token EOF
+%token COMMENT
 
 //defining precedence and associativity
-%left AND OR
-%left LT LTE GT GTE EQ NEQ
+%right ASSIGN
+%left OR
+%left AND
+%left EQ NEQ
+%left LT LTE GT GTE
 %left PLUS MINUS
 %left MUL DIV
 
@@ -87,36 +91,50 @@ let parse_error s =
 %%
 
 program:
-  stmt EOF { Printf.printf ("found EOF"); $1 }
+  stmt_grp EOF { $1 }
 
-stmt :
-  /* empty */ { Printf.printf ("found empty"); (Ast.skip, 0) }  
-//   | stmt stmt { (Ast.Seq($1, $2), 0) }
-//   | LBRACE stmt RBRACE { $2 }
-//   | exp SEMICOLON { (Ast.Exp($1), 0) }
-//   | RETURN exp SEMICOLON { Printf.printf ("found return"); (Ast.Return($2), 1) }
-//   | if_else {($1, 0)}
-//   | while {($1, 0)}
-//   | for {($1, 0)}
+stmt_grp: 
+  | stmt { ($1) }
+  | stmt stmt_grp { (Ast.Seq($1, $2), 0) }
 
-// if_else: IF exp stmt ELSE stmt { Ast.If($2,$3,$5 ) }
-// while: WHILE exp stmt { Ast.While($2,$3) }
-// for: FOR LPAREN exp SEMICOLON exp SEMICOLON exp RPAREN stmt { Ast.For($3,$5,$7,$9) }
+stmt : 
+  | LBRACE stmt_grp RBRACE { $2 }
+  | exp SEMICOLON { (Ast.Exp($1), 0) }
+  | RETURN exp SEMICOLON {(Ast.Return($2), 1) }
+  | if_stat {($1, 0)}
+  | if_else {($1, 0)}
+  | while_loop {($1, 0)}
+  | for_loop {($1, 0)}
+  // | COMMENT { Printf.printf ("parse: found comment"); (Ast.skip, 0) }
 
-// exp:
-//   | NUM { (Ast.Int($1), 2) }
-//   | VAR { (Ast.Var($1), 0) }
-//   | exp PLUS exp { Printf.printf ("found plus"); (Ast.Binop($1,Ast.Plus,$3), 0) }
-//   | exp MINUS exp { (Ast.Binop($1,Ast.Minus,$3), 0) }
-//   | exp MUL exp { (Ast.Binop($1,Ast.Times,$3), 0) }
-//   | exp DIV exp { (Ast.Binop($1,Ast.Div,$3), 0) }
-//   | exp LT exp { (Ast.Binop($1,Ast.Lt,$3), 0) }
-//   | exp LTE exp { (Ast.Binop($1,Ast.Lte,$3), 0) }
-//   | exp GT exp { (Ast.Binop($1,Ast.Gt,$3), 0) }
-//   | exp GTE exp { (Ast.Binop($1,Ast.Gte,$3), 0) }
-//   | exp EQ exp { (Ast.Binop($1,Ast.Eq,$3), 0) }
-//   | exp NEQ exp { (Ast.Binop($1,Ast.Neq,$3), 0) } 
-//   | LPAREN exp RPAREN { $2 }
-//   | VAR ASSIGN exp { (Ast.Assign($1, $3), 0) }
 
-// %%
+if_only: IF exp stmt { ($2, $3) }
+if_stat: if_only { Ast.If(fst $1, snd $1, (Ast.skip, 0)) }
+if_else: if_stat ELSE stmt { 
+  match $1 with
+  | Ast.If(fst, snd, _) -> Ast.If(fst, snd, $3)
+ }
+while_loop: WHILE exp stmt { Ast.While($2,$3) }
+for_loop: FOR LPAREN exp SEMICOLON exp SEMICOLON exp RPAREN stmt { Ast.For($3,$5,$7,$9) }
+
+exp:
+  | NUM { (Ast.Int($1), 2) }
+  | VAR { (Ast.Var($1), 0) }
+  | exp PLUS exp { (Ast.Binop($1,Ast.Plus,$3), 0) }
+  | exp MINUS exp { (Ast.Binop($1,Ast.Minus,$3), 0) }
+  | exp MUL exp { (Ast.Binop($1,Ast.Times,$3), 0) }
+  | exp DIV exp { (Ast.Binop($1,Ast.Div,$3), 0) }
+  | exp LT exp { (Ast.Binop($1,Ast.Lt,$3), 0) }
+  | exp LTE exp { (Ast.Binop($1,Ast.Lte,$3), 0) }
+  | exp GT exp { (Ast.Binop($1,Ast.Gt,$3), 0) }
+  | exp GTE exp { (Ast.Binop($1,Ast.Gte,$3), 0) }
+  | exp EQ exp { (Ast.Binop($1,Ast.Eq,$3), 0) }
+  | exp NEQ exp { (Ast.Binop($1,Ast.Neq,$3), 0) } 
+  | exp AND exp { (Ast.And($1,$3), 0) } 
+  | exp OR exp { (Ast.Or($1,$3), 0) }
+  | NOT exp { (Ast.Not($2), 0) } 
+  | MINUS exp { (Ast.Binop((Ast.Int(0), 0),Ast.Minus,$2), 0) }
+  | LPAREN exp RPAREN { $2 }
+  | VAR ASSIGN exp { (Ast.Assign($1, $3), 0) }
+
+%%
